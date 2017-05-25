@@ -175,6 +175,9 @@ func populateFields(m *client.Machine) error {
 	if err != nil {
 		return errors.Wrap(err, "populateFields marshall machineConfig")
 	}
+	if m.Data == nil {
+		m.Data = map[string]interface{}{}
+	}
 	fields, ok := m.Data["fields"].(map[string]interface{})
 	if !ok {
 		fields = map[string]interface{}{}
