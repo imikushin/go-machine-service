@@ -151,7 +151,46 @@ func apply(m *client.Machine, ht *client.HostTemplate, apiClient *client.Rancher
 		return err
 	}
 
+	if err := populateFields(m); err != nil {
+		return err
+	}
+
 	return err
+}
+
+func populateFields(m *client.Machine) error {
+	content, err := json.Marshal(m)
+	if err != nil {
+		return errors.Wrap(err, "populateFields marshall")
+	}
+	mm := map[string]interface{}{}
+	if err := json.Unmarshal(content, &mm); err != nil {
+		return errors.Wrap(err, "populateFields unmarshall to mm")
+	}
+	machineConfig := mm[m.Driver+"Config"]
+	if machineConfig == nil {
+		return nil
+	}
+	machineConfigContent, err := json.Marshal(machineConfig)
+	if err != nil {
+		return errors.Wrap(err, "populateFields marshall machineConfig")
+	}
+	fields, ok := m.Data["fields"].(map[string]interface{})
+	if !ok {
+		fields = map[string]interface{}{}
+		m.Data["fields"] = fields
+	}
+	driverConfig := fields[m.Driver+"Config"]
+	if driverConfig == nil {
+		driverConfig = map[string]interface{}{}
+		fields[m.Driver+"Config"] = driverConfig
+	}
+	if err := json.Unmarshal(machineConfigContent, &driverConfig); err != nil {
+		return errors.Wrap(err, "populateFields unmarshall to fields")
+	}
+	fields[m.Driver+"Config"] = driverConfig
+	m.Data["fields"] = fields
+	return nil
 }
 
 func copyData(m *client.Machine, from interface{}) error {
