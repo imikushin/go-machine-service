@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/Sirupsen/logrus"
 	"github.com/rancher/event-subscriber/events"
 	_ "github.com/rancher/go-machine-service/logging"
 	"github.com/rancher/go-rancher/v2"
@@ -11,47 +10,25 @@ import (
 )
 
 var (
-	eventFlavorHostCreate = &events.Event{
+	eventDOHostCreate = &events.Event{
 		Name:         "physicalhost.create;handler=goMachineService",
-		ID:           "873c98c6-50c3-4e5e-b3ca-aa37f4020588",
-		ReplyTo:      "reply.4427210190781767296",
-		ResourceID:   "1ph7",
+		ID:           "7c933690-cfb8-4317-a84b-ee8b1be62f1",
+		ReplyTo:      "reply.5495258476566540213",
+		ResourceID:   "1ph1",
 		ResourceType: "physicalHost",
 
 		Data: map[string]interface{}{
-			"name":          "ivan-do1",
-			"kind":          "machine",
-			"externalId":    "8bb270e3-5920-412a-a4c4-3951e16ccbe9",
-			"rancherConfig": map[string]interface{}{"flavor": "digitalocean-sfo2-2gb"},
-			"accountId":     5,
-			"hostname":      "ivan-do1",
-		},
-	}
+			"name":       "ivan-do-h1",
+			"kind":       "machine",
+			"externalId": "a2ac1475-c64c-4331-a27f-f5e9b00be7b7",
+			"accountId":  5,
+			"hostname":   "ivan-do-h1",
 
-	eventFlavorHostDelete1 = &events.Event{
-		Name:         "physicalhost.remove;handler=goMachineService",
-		ID:           "a439dbf2-7657-46ae-931a-e1b400f80fe0",
-		ReplyTo:      "reply.4074420224106915443",
-		ResourceID:   "1ph6",
-		ResourceType: "physicalHost",
-
-		Data: map[string]interface{}{},
-	}
-
-	eventFlavorHostBootstrap = &events.Event{
-		Name:         "physicalhost.bootstrap;handler=goMachineService",
-		ID:           "0b513573-57be-4905-84d7-4d4b6d8e9c37",
-		ReplyTo:      "reply.3249066143597845078",
-		ResourceID:   "1ph8",
-		ResourceType: "physicalHost",
-
-		Data: map[string]interface{}{
-			"name":          "ivan-do3",
-			"kind":          "machine",
-			"externalId":    "921d6c24-d22b-4032-a1bd-b3a7318b402e",
-			"rancherConfig": map[string]interface{}{"flavor": "digitalocean-sfo2-2gb"},
-			"accountId":     5,
-			"hostname":      "ivan-do3",
+			"digitaloceanConfig": map[string]interface{}{
+				"image":  "ubuntu-16-04-x64",
+				"region": "sfo2",
+				"size":   "1gb",
+			},
 		},
 	}
 )
@@ -66,21 +43,7 @@ var apiClient, err = client.NewRancherClient(&client.ClientOpts{
 func TestCreateMachine(t *testing.T) {
 	assert := require.New(t)
 
-	err := CreateMachine(eventFlavorHostCreate, apiClient)
-	assert.Nil(err)
-}
-
-func TestDeleteMachine1(t *testing.T) {
-	assert := require.New(t)
-
-	err := PurgeMachine(eventFlavorHostDelete1, apiClient)
-	assert.Nil(err)
-}
-
-func TestActivateMachine(t *testing.T) {
-	assert := require.New(t)
-
-	err := ActivateMachine(eventFlavorHostBootstrap, apiClient)
+	err := CreateMachine(eventDOHostCreate, apiClient)
 	assert.Nil(err)
 }
 
@@ -100,20 +63,4 @@ func TestMachineExists(t *testing.T) {
 
 	exists, _ := machineExists("/Users/ivan/.cattle/machine/machines/fdccb274-92b2-4e77-ad79-f0a772622e80", "ivan-do1")
 	assert.False(exists)
-}
-
-var fields = map[string]interface{}{
-	"digitaloceanConfig": map[string]interface{}{
-		"accessToken": "7afcc8d639e1087c9f8d283d7f35e72902d32ceca6237f0c48fca10d4385627d",
-	},
-}
-
-func TestAddProviderFields(t *testing.T) {
-	assert := require.New(t)
-
-	rancherConfig := map[string]interface{}{}
-
-	rancherConfigAppendFieldsData(rancherConfig, fields, "digitalocean")
-	logrus.Warnf("%+v", rancherConfig)
-	assert.Equal(fields["digitaloceanConfig"].(map[string]interface{})["accessToken"], rancherConfig["digitaloceanAccessToken"])
 }
