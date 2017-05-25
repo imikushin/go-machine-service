@@ -178,15 +178,16 @@ func populateFields(m *client.Machine) error {
 	fields, ok := m.Data["fields"].(map[string]interface{})
 	if !ok {
 		fields = map[string]interface{}{}
-		m.Data["fields"] = fields
 	}
-	driverConfig := fields[m.Driver+"Config"]
-	if driverConfig == nil {
+	driverConfig, ok := fields[m.Driver+"Config"].(map[string]interface{})
+	if !ok {
 		driverConfig = map[string]interface{}{}
-		fields[m.Driver+"Config"] = driverConfig
 	}
 	if err := json.Unmarshal(machineConfigContent, &driverConfig); err != nil {
 		return errors.Wrap(err, "populateFields unmarshall to fields")
+	}
+	for _, key := range []string{"id", "type", "links", "actions"} {
+		delete(driverConfig, key)
 	}
 	fields[m.Driver+"Config"] = driverConfig
 	m.Data["fields"] = fields
